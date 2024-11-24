@@ -273,68 +273,23 @@ def execute_plan(plan, project_folder, project_structure, filename_to_path, goal
     return logs
 
 def execute_step(step, project_folder, project_structure, filename_to_path, goal):
-    """
-    Executes a single step.
-
-    Parameters:
-        step (str): The step description.
-        project_folder (str): The path to the project folder.
-        project_structure (dict): The project directory structure.
-        filename_to_path (dict): A mapping from filenames to their paths.
-
-    Returns:
-        list: A log of execution details for this step.
-    """
     logs = []
     print(f"\nExecuting step: {step}")
     logs.append(f"Executing step: {step}")
 
+    # Build existing files context
+    existing_files = {}
+    for root, dirs, files in os.walk(project_folder):
+        for fname in files:
+            if fname.endswith('.py') or fname.endswith('.txt') or fname.endswith('.md'):
+                file_path = os.path.join(root, fname)
+                rel_path = os.path.relpath(file_path, project_folder)
+                if os.path.isfile(file_path):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        existing_files[rel_path] = f.read()
+
     # Determine if we need to get content from AI
     if any(keyword in step.lower() for keyword in ['write', 'implement', 'add', 'update', 'create']):
-        filename_from_step = extract_filename(step)
-        if filename_from_step and is_non_text_file(filename_from_step):
-            # Handle non-text files
-            filename = filename_from_step
-            # Get the correct relative path
-            sanitized_filename = sanitize_filename(filename)
-            if sanitized_filename in filename_to_path:
-                relative_path = filename_to_path[sanitized_filename]
-            else:
-                relative_path = sanitized_filename
-            placeholder_filename = f"{os.path.basename(relative_path)}.replacement"
-            full_path = os.path.normpath(os.path.join(project_folder, os.path.dirname(relative_path), placeholder_filename))
-            os.makedirs(os.path.dirname(full_path), exist_ok=True)
-            with open(full_path, 'w', encoding='utf-8') as f:
-                f.write(f"Placeholder for {filename_from_step}")
-            print(f"Created placeholder file for non-text file: {full_path}")
-            logs.append(f"Created placeholder for non-text file: {full_path}")
-        else:
-            # We need to get content from the AI
-            try:
-                if filename_from_step:
-                    filename = filename_from_step
-                else:
-                    logs.append("No filename specified in step.")
-                    print("No filename specified in step.")
-                    return logs
-                # Get the correct relative path
-                sanitized_filename = sanitize_filename(filename)
-                if sanitized_filename in filename_to_path:
-                    relative_path = filename_to_path[sanitized_filename]
-                else:
-                    relative_path = sanitized_filename
-                content = get_content_from_ai(step, project_folder, goal)
-                full_path = os.path.normpath(os.path.join(project_folder, relative_path))
-                os.makedirs(os.path.dirname(full_path), exist_ok=True)
-                with open(full_path, 'w', encoding='utf-8') as f:
-                    f.write(content)
-                print(f"Wrote content to {full_path}")
-                logs.append(f"Wrote content to {full_path}")
-            except Exception as e:
-                logs.append(f"Failed to execute step: {e}")
-                print(f"Failed to execute step: {e}")
-    elif 'delete' in step.lower():
-        # Handle delete operations
         filename_from_step = extract_filename(step)
         if filename_from_step:
             filename = filename_from_step
@@ -344,14 +299,24 @@ def execute_step(step, project_folder, project_structure, filename_to_path, goal
                 relative_path = filename_to_path[sanitized_filename]
             else:
                 relative_path = sanitized_filename
-            full_path = os.path.normpath(os.path.join(project_folder, relative_path))
-            if os.path.exists(full_path):
-                os.remove(full_path)
-                print(f"Deleted file: {full_path}")
-                logs.append(f"Deleted file: {full_path}")
-            else:
-                logs.append(f"File {full_path} does not exist.")
-                print(f"File {full_path} does not exist.")
+            try:
+                content = get_content_from_ai(
+                    step,
+                    filename,
+                    relative_path,
+                    project_structure,
+                    existing_files,
+                    goal
+                )
+                full_path = os.path.normpath(os.path.join(project_folder, relative_path))
+                os.makedirs(os.path.dirname(full_path), exist_ok=True)
+                with open(full_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                print(f"Wrote content to {full_path}")
+                logs.append(f"Wrote content to {full_path}")
+            except Exception as e:
+                logs.append(f"Failed to execute step: {e}")
+                print(f"Failed to execute step: {e}")
         else:
             logs.append("No filename specified in step.")
             print("No filename specified in step.")
@@ -361,40 +326,37 @@ def execute_step(step, project_folder, project_structure, filename_to_path, goal
         logs.append(f"Executed step directly: {step}")
     return logs
 
-def get_content_from_ai(step, project_folder, goal):
+def get_content_from_ai(step, filename, file_path, project_structure, existing_files, goal):
     """
     Gets content from the AI for the given step.
 
     Parameters:
         step (str): The step description.
-        project_folder (str): The path to the project folder.
+        filename (str): The name of the file.
+        file_path (str): The path to the file within the project.
+        project_structure (dict): The project directory structure.
+        existing_files (dict): A dictionary of existing files and their contents.
         goal (str): The user's overall goal.
 
     Returns:
         str: The content to be written to the file.
     """
-    existing_files = {}
-    for root, dirs, files in os.walk(project_folder):
-        for filename in files:
-            if filename.endswith('.py') or filename.endswith('.txt') or filename.endswith('.md'):
-                file_path = os.path.join(root, filename)
-                rel_path = os.path.relpath(file_path, project_folder)
-                if os.path.isfile(file_path):
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        existing_files[rel_path] = f.read()
-
+    # Prepare the existing files context
     context = ""
     if existing_files:
         context = "Here are the current files in the project:\n"
-        for filename, content in existing_files.items():
-            context += f"\nFilename: {filename}\nContent:\n```\n{content}\n```\n"
+        for fname, content in existing_files.items():
+            context += f"\nFilename: {fname}\nContent:\n```\n{content}\n```\n"
+
+    # Prepare the project directory structure
+    project_structure_str = json.dumps(project_structure, indent=4)
 
     system_message = {
         'role': 'system',
         'content': (
             'You are an AI assistant specializing in software development. '
-            'Your task is to provide the code or content for the requested step in the project. '
-            'Do not include any explanations or specify filenames. '
+            'Your task is to provide the code or content for the specified file in the project. '
+            'Do not include any explanations. '
             'Only provide the code or content enclosed in triple backticks.'
         )
     }
@@ -402,7 +364,9 @@ def get_content_from_ai(step, project_folder, goal):
         'role': 'user',
         'content': (
             f'Project Goal:\n"{goal}"\n\n'
-            f'Please provide the content for the following step:\n\n"{step}"\n\n'
+            f'Project Directory Structure:\n{project_structure_str}\n\n'
+            f'You are working on the file: "{file_path}"\n'
+            f'Task Description:\n"{step}"\n\n'
             f'{context}\n'
             'Only provide the code or content enclosed in triple backticks.'
         )
@@ -411,6 +375,7 @@ def get_content_from_ai(step, project_folder, goal):
     response = call_grok_api(messages)
     content = parse_content_from_response(response)
     return content
+
 
 def parse_content_from_response(response):
     """
