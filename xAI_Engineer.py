@@ -150,35 +150,6 @@ def format_structure(structure, indent=0):
             lines.extend(format_structure(value, indent + 1))
     return '\n'.join(lines)
 
-def provide_example_subtasks(goal):
-    """
-    Provides an example list of reasonable subtasks based on the goal.
-
-    Parameters:
-        goal (str): The user's goal description.
-
-    Returns:
-        str: An example of reasonable subtasks.
-    """
-    example_subtasks = (
-        "Example of a full list of subtasks for a snake game with a save system:\n\n"
-        "1. Set up the project directory structure.\n"
-        "2. Initialize a Git repository.\n"
-        "3. Create a virtual environment and install necessary packages.\n"
-        "4. Write the main game loop in main.py.\n"
-        "5. Implement the Snake class in snake.py.\n"
-        "6. Implement the Food class in food.py.\n"
-        "7. Implement the GameManager class in game_manager.py to handle game states.\n"
-        "8. Implement the SaveManager class in save_manager.py for saving and loading game states.\n"
-        "9. Write helper functions in helpers.py.\n"
-        "10. Add sound effects and images to the assets folder.\n"
-        "11. Update README.md with installation and usage instructions.\n"
-        "12. Write unit tests for the key components.\n"
-        "13. Clean up code and remove any unnecessary files.\n\n"
-        "Please ensure each subtask is concise and fits on a single line."
-    )
-    return example_subtasks
-
 def decompose_goal(goal, project_structure):
     """
     Decomposes the user's goal into a detailed plan using the AI model.
@@ -190,15 +161,63 @@ def decompose_goal(goal, project_structure):
     Returns:
         list: A list of plan steps extracted from the model's response.
     """
-    example_subtasks = provide_example_subtasks(goal)
+    example_subtasks = """
+Example of a full list of detailed subtasks for a snake game with a save system:
+
+Its Project Directory Structure(this is not the part you are going to output):
+snake_game/
+    README.md
+    requirements.txt
+    main.py
+    game/
+        __init__.py
+        snake.py
+        food.py
+        game_manager.py
+    assets/
+        images/
+            snake_head.png
+            snake_body.png
+            food.png
+        sounds/
+            eat.wav
+            game_over.wav
+    save_system/
+        __init__.py
+        save_manager.py
+    utils/
+        __init__.py
+        helpers.py
+
+Subtasks:(This is what you need to output)
+1. Set up the project directory structure as specified above.
+2. Initialize a Git repository in the 'snake_game/' directory.
+3. Create a virtual environment in 'snake_game/' and install necessary packages like pygame.
+4. Write the main game loop in 'snake_game/main.py' that initializes the game window and handles user input and events.
+5. Implement the Snake class in 'snake_game/game/snake.py' with methods for movement (`move()`), growth (`grow()`), and collision detection (`check_collision()`), ensuring it interacts with `GameManager` in 'snake_game/game/game_manager.py'.
+6. Implement the Food class in 'snake_game/game/food.py' with methods to randomly place food on the game grid (`place_food()`) and detect when the snake consumes it.
+7. Implement the GameManager class in 'snake_game/game/game_manager.py' to handle game states (`start_game()`, `pause_game()`, `end_game()`), and manage interactions between `Snake` and `Food` classes.
+8. Implement the SaveManager class in 'snake_game/save_system/save_manager.py' for saving and loading game states to a file, including methods like `save_game()` and `load_game()`.
+9. Write helper functions in 'snake_game/utils/helpers.py' for tasks like rendering text on the screen and managing high scores.
+10. Add sound effects and images to the 'snake_game/assets/' folder and ensure they are correctly loaded and used in the game.
+11. Update 'snake_game/README.md' with installation instructions, usage guidelines, and game controls.
+12. Write unit tests for key components like `Snake`, `Food`, and `GameManager` classes using a testing framework like unittest, and place them in 'snake_game/tests/'.
+13. Clean up code by adding comments, adhering to PEP 8 standards, and removing any unnecessary files.
+
+Please ensure each subtask is concise and fits on a single line.
+"""
+
     system_message = {
         'role': 'system',
         'content': (
             'You are an AI assistant specializing in software development. '
-            'Your task is to provide a detailed plan for the software project, including all operations in the project folder, such as file and folder operations. '
-            'When providing the plan, ensure that each subtask is concise and fits on a single line. '
+            'Your task is to decompose the user\'s goal into a detailed plan. '
+            'For each subtask that involves writing code, provide detailed descriptions of the functionalities to implement, '
+            'specify the functions or methods that need to be written, and mention any dependencies on other scripts or modules. '
+            'Include the exact file paths as specified in the project directory structure. '
+            'Ensure that each subtask is concise and fits on a single line. '
             'Do not split a single subtask into multiple lines.\n\n'
-            'Here is an example of the expected format for a snake game with a save system:\n\n' +
+            'Here is an example:\n\n' +
             example_subtasks +
             'Please follow this format closely when providing the plan.'
         )
@@ -207,7 +226,9 @@ def decompose_goal(goal, project_structure):
         'role': 'user',
         'content': (
             f'Based on the following goal and project directory structure, please provide a detailed plan, including all operations in the project folder. '
-            f'Ensure that the plan is as detailed as possible and includes only necessary files and steps relevant to the goal.\n\n'
+            f'For each subtask that involves writing code, include details about what functionalities to implement, which functions or classes to write, '
+            f'and specify any dependencies on other scripts or modules if necessary. '
+            f'Include the exact file paths as specified in the project directory structure.\n\n'
             f'Goal:\n"{goal}"\n\n'
             f'Project Directory Structure:\n{json.dumps(project_structure, indent=4)}\n\n'
             'Please ensure each subtask is concise and fits on a single line. '
@@ -219,6 +240,7 @@ def decompose_goal(goal, project_structure):
     response = call_grok_api(messages)
     plan = parse_subtasks(response)
     return plan
+
 
 def parse_subtasks(response):
     """
