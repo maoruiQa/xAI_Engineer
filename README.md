@@ -1,5 +1,8 @@
 # xAI_Engineer
 a tool similar to GPT_Engineer and Auto GPT
+
+## ps: I think I've done my best and have no idea what else to improve, but it seems that either xAi or my script is not good enough. Please fork this project if you know how to improve it.
+
 ## This is a AI toolkit powered by xAI. It seems to be the first Auto AI toolkit based on xAI. To use this app, you just need to clone the responstory and follow the steps below:
 Setting up
 1. open the "X_Engineer.py" with notepad or vim
