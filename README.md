@@ -1,5 +1,5 @@
 # xAI_Engineer
-a tool similar to GPT_Engineer and Auto GPT
+🚀 One-Click Python Project Builder! | Free xAI API Tool for Games & Tools 🛠️
 
 ## ps: I think I've done my best and have no idea what else to improve, but it seems that either xAi or my script is not good enough. Please fork this project if you know how to improve it.
 
