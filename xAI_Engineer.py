@@ -5,7 +5,7 @@ import time
 import re
 
 def call_grok_api(messages):
-    api_key = 'YOUR-XAI-API-KEY'  # Replace with your actual API key
+    api_key = 'YOUR_XAI_API_KEY'  # Replace with your actual API key
     url = 'https://api.x.ai/v1/chat/completions'
     headers = {
         'Content-Type': 'application/json',
@@ -223,30 +223,68 @@ def decompose_goal(goal, project_structure, file_sizes):
     """
     example_subtasks = """
 Example of a full list of detailed subtasks (for illustration):
-1. Create a new file 'game/mario.py' and write the Mario class, including basic movement and jump functionality.
-2. Create a new file 'game/enemy.py' and write the Enemy class, including AI for movement and attack patterns.
-3. Create a new file 'game/level.py' and write the Level class to manage the layout, obstacles, and level progression.
-4. Create a new file 'game/game_manager.py' and write the GameManager class to handle game state transitions (e.g., start, pause, game over).
-5. Create a new file 'game/collision.py' and write collision detection functions for Mario, enemies, and environment elements.
-6. Create a new file 'save_system/save_manager.py' and write the SaveManager class for saving and loading game progress.
-7. Create a new file 'utils/helpers.py' and write utility functions, such as loading assets, score calculation, and debug tools.
-8. Create a new file 'game/items.py' and write the Items class to handle collectible items like coins, power-ups, and health boosts.
-9. Create a temporary file 'main_1.tmp' and write import statements for all necessary modules.
-10. Create a temporary file 'main_2.tmp' and write game initialization code, including asset loading and window setup.
-11. Create a temporary file 'main_3.tmp' and write the game loop code, including input handling, game logic updates, and rendering.
-12. Create a temporary file 'main_4.tmp' and write game over logic and score display.
-13. Append the content of 'main_1.tmp' to 'main.py'.
-14. Append the content of 'main_2.tmp' to 'main.py'.
-15. Append the content of 'main_3.tmp' to 'main.py'.
-16. Append the content of 'main_4.tmp' to 'main.py'.
-17. Delete 'main_1.tmp'.
-18. Delete 'main_2.tmp'.
-19. Delete 'main_3.tmp'.
-20. Delete 'main_4.tmp'.
-21. Create a new file 'assets/config/settings.py' and write a configuration file for game settings, including screen size, FPS, and control mappings.
-22. Create a new file 'readme.md' and write the tutorial for deploying or running this project, including basic gameplay instructions.
-23. Create a new file 'requirements.txt' and write dependencies and their versions. (If this is not a python project, you do not need to write this task)
+1. Create a new file 'game/player.py' and write the Player class.
+   - The Player class should include methods for movement (move_left, move_right, jump).
+   - This script will be called by 'game_manager.py' for player initialization and control.
+   - The 'Player' class should expose its current position for use by other game components.
+
+2. Create a new file 'game/enemies.py' and write the Enemy class.
+   - The Enemy class should include methods for movement patterns and interactions (e.g., attack).
+   - This script will be used by 'game_manager.py' to spawn and control enemy behaviors.
+   - The 'Enemy' class should expose methods to get its current state (e.g., is_alive).
+
+3. Create a new file 'game/level.py' and write the Level class.
+   - The Level class should define the structure of the game levels, including platforms and obstacles.
+   - This script will be called by 'game_manager.py' to load and manage levels.
+   - The 'Level' class should provide methods for retrieving platform positions and level dimensions.
+
+4. Create a new file 'game/game_manager.py' and write the GameManager class.
+   - The GameManager class should handle the game loop, including updates for the player, enemies, and levels.
+   - This script will call 'player.py', 'enemies.py', and 'level.py' for their respective functionalities.
+   - The 'GameManager' class should expose a method to start and stop the game.
+
+5. Create a new file 'save_system/save_manager.py' and write the SaveManager class.
+   - The SaveManager class should handle saving and loading game progress.
+   - This script will be called by 'game_manager.py' to save player progress.
+   - The 'SaveManager' class should expose methods to save and load data to/from a file.
+
+6. Create a new file 'utils/helpers.py' and write utility functions.
+   - This script should include reusable functions such as collision detection and file handling utilities.
+   - This script will be called by multiple scripts, including 'player.py' and 'game_manager.py'.
+   - Expose functions like 'check_collision' and 'read_file_safe' for external use.
+
+7. Create a temporary file 'main_1.tmp' and write import statements.
+   - This file will import the Player, Enemy, Level, and GameManager classes.
+   - Will be appended to 'main.py'.
+
+8. Create a temporary file 'main_2.tmp' and write game initialization code.
+   - This file will initialize instances of GameManager, Player, and Level.
+   - Will be appended to 'main.py'.
+
+9. Create a temporary file 'main_3.tmp' and write the game loop code.
+   - This file will define the game loop, calling GameManager for updates.
+   - Will be appended to 'main.py'.
+
+10. Create a temporary file 'main_4.tmp' and write game over logic.
+    - This file will handle game-over events, calling GameManager to reset or quit.
+    - Will be appended to 'main.py'.
+
+11. Append the content of 'main_1.tmp' to 'main.py'.
+12. Append the content of 'main_2.tmp' to 'main.py'.
+13. Append the content of 'main_3.tmp' to 'main.py'.
+14. Append the content of 'main_4.tmp' to 'main.py'.
+15. Delete 'main_1.tmp'.
+16. Delete 'main_2.tmp'.
+17. Delete 'main_3.tmp'.
+18. Delete 'main_4.tmp'.
+
+19. Create a new file 'readme.md' and write the tutorial for deploying or running this project.
+    - The readme should include instructions for setting up dependencies and running the game.
+
+20. Create a new file 'requirements.txt' and write dependencies and their versions.
+    - Include necessary libraries such as pygame.
 """
+
 
     system_message = {
         'role': 'system',
@@ -260,7 +298,6 @@ Example of a full list of detailed subtasks (for illustration):
 	    'If there is no temporary files, don\'t \"Append\" anything in the tasks. If you want to \"Append\" something, you must say \"Append the content of \'xxx_n.tmp\' to \'xxx.py\'.\"(n is a number and xxx is the name of the script) '
             'When planning tasks, consider three aspects: user requirements (the goal), the directory structure, and the estimated file sizes of each file. '
             'If multiple temporary files need to be combined into one of the script files, please explicitly output the separate subtasks for appending them in order. '
-            'Each subtask should be one line and concise, including the exact file paths relative to the project root. '
             'No explanations, only list the tasks.\n\n'
             'Here is an example:\n\n' +
             example_subtasks
@@ -268,16 +305,17 @@ Example of a full list of detailed subtasks (for illustration):
     }
 
     user_message = {
-        'role': 'user',
-        'content': (
-            f'Based on the following goal, project directory structure, and estimated file sizes, please provide a detailed plan. '
-            f'Only use these operations: create/write file, delete file, append file content. '
-            f'No binary, audio, or image creation. All files are text-based.\n\n'
-            f'Goal:\n"{goal}"\n\n'
-            f'Project Directory Structure:\n{json.dumps(project_structure, indent=4)}\n\n'
-            f'Estimated File Sizes (in bytes):\n{json.dumps(file_sizes, indent=4)}\n\n'
-            'Ensure each subtask is on a single line and concise. Provide a numbered list of subtasks.'
-        )
+    'role': 'user',
+    'content': (
+        f'Based on the following goal, project directory structure, and estimated file sizes, please provide a detailed plan. '
+        f'Only use these operations: create/write file, delete file, append file content. '
+        f'No binary, audio, or image creation. All files are text-based.\n\n'
+        f'Goal:\n"{goal}"\n\n'
+        f'Project Directory Structure:\n{json.dumps(project_structure, indent=4)}\n\n'
+        f'Estimated File Sizes (in bytes):\n{json.dumps(file_sizes, indent=4)}\n\n'
+        'For some tasks, especially those begin with \"Create\" or \"Write\", provide the main action on the first line, followed by indented details using "-" marks(if it is necessary). '
+        'Each task should have implementation details that describe what the file should contain or do.'
+    )
     }
     messages = [system_message, user_message]
     response = call_grok_api(messages)
@@ -286,14 +324,40 @@ Example of a full list of detailed subtasks (for illustration):
 
 def parse_subtasks(response):
     steps = []
+    current_task = []
     lines = response.strip().split('\n')
+    
     for line in lines:
-        if line.strip():
-            task = line.strip()
-            match = re.match(r'^\d+(\.\d+)*\.?\s*(.*)', task)
-            if match:
-                task = match.group(2).strip()
-            steps.append(task)
+        if not line.strip():
+            continue
+            
+        # 检查是否是新的主任务（以数字开头或是独立的create/append/delete操作）
+        if (re.match(r'^\d+\.', line.lstrip()) or 
+            (not current_task and re.search(r'^(Create|Append|Delete)', line.strip(), re.IGNORECASE))):
+            # 如果已经收集了之前的任务，添加到步骤中
+            if current_task:
+                steps.append('\n'.join(current_task))
+                current_task = []
+            
+            # 移除可能存在的行首数字编号
+            clean_line = re.sub(r'^\d+\.\s*', '', line.strip())
+            current_task.append(clean_line)
+        else:
+            # 这是子任务/细节行，添加到当前任务
+            if current_task:  # 只在有主任务时添加
+                stripped_line = line.strip()
+                # 如果行以连字符开头或者是纯操作指令，直接添加
+                if (stripped_line.startswith('-') or 
+                    re.match(r'^(Create|Append|Delete)', stripped_line, re.IGNORECASE)):
+                    current_task.append(stripped_line)
+                # 否则，如果不是空行且不是独立操作，添加为子任务
+                elif stripped_line:
+                    current_task.append(f"- {stripped_line}")
+    
+    # 不要忘记添加最后一个任务
+    if current_task:
+        steps.append('\n'.join(current_task))
+    
     return steps
 
 def build_filename_to_path_mapping(structure, current_path=''):
@@ -316,8 +380,9 @@ def execute_plan(plan, project_folder, project_structure, filename_to_path, goal
 
 def execute_step(step, project_folder, project_structure, filename_to_path, goal, top_level_dir):
     logs = []
-    print(f"\nExecuting step: {step}")
-    logs.append(f"Executing step: {step}")
+    main_task = step.split('\n')[0]
+    print(f"\nExecuting task:\n{main_task}")
+    logs.append(f"\nExecuting task:\n{step}")
     print(f"Top level directory: {top_level_dir}")
     logs.append(f"Top level directory: {top_level_dir}")
 
@@ -332,11 +397,11 @@ def execute_step(step, project_folder, project_structure, filename_to_path, goal
                     with open(file_path, 'r', encoding='utf-8') as f:
                         existing_files[rel_path] = f.read()
 
-    step_lower = step.lower()
+    step_lower = main_task.lower()
 
     # 处理删除操作
     if 'delete' in step_lower:
-        filename = extract_filename(step, operation='delete')
+        filename = extract_filename(main_task, operation='delete')
         if filename:
             # 规范化文件名
             sanitized_filename = sanitize_filename(filename)
@@ -376,7 +441,7 @@ def execute_step(step, project_folder, project_structure, filename_to_path, goal
     if 'append' in step_lower:
         # We assume format: "Append the content of 'source' to 'destination'"
         # Extract source and destination filenames
-        source, destination = extract_append_filenames(step)
+        source, destination = extract_append_filenames(main_task)
         # Debug logs
         print(f"Extracted source: {source}, destination: {destination}")
         logs.append(f"Extracted source: {source}, destination: {destination}")
@@ -419,7 +484,7 @@ def execute_step(step, project_folder, project_structure, filename_to_path, goal
 
     # Handle create/write operation (default)
     if any(keyword in step_lower for keyword in ['write', 'create']):
-        filename_from_step = extract_filename(step, operation='write')
+        filename_from_step = extract_filename(main_task, operation='write')
         if filename_from_step:
             filename = filename_from_step
             # 将路径统一为'/'
@@ -456,8 +521,8 @@ def execute_step(step, project_folder, project_structure, filename_to_path, goal
                 os.makedirs(os.path.dirname(full_path), exist_ok=True)
                 with open(full_path, 'w', encoding='utf-8') as f:
                     f.write(content)
-                print(f"Wrote content to {full_path}")
-                logs.append(f"Wrote content to {full_path}")
+                print(f"Wrote content to {full_path}\n")
+                logs.append(f"Wrote content to {full_path}\n")
             except Exception as e:
                 logs.append(f"Failed to execute step: {e}")
                 print(f"Failed to execute step: {e}")
@@ -466,37 +531,45 @@ def execute_step(step, project_folder, project_structure, filename_to_path, goal
             print("No filename specified in step.")
     else:
         # Other steps (if any appear, just log)
-        print(f"Directly executing step: {step}")
-        logs.append(f"Executed step directly: {step}")
+        print(f"Unknown Command: {step}")
+        logs.append(f"Unknown Command: {step}")
 
     return logs
 
 def get_content_from_ai(step, filename, file_path, project_structure, existing_files, goal):
+    # Get the main task description (first line) and any additional details
+    task_lines = step.split('\n')
+    main_task = task_lines[0]
+    details = '\n'.join(task_lines[1:]) if len(task_lines) > 1 else ""
+    
     context = ""
     if existing_files:
         context = "Here are the current files in the project:\n"
         for fname, content in existing_files.items():
-            lang = os.path.splitext(fname)[1][1:]  # e.g., 'py', 'txt'
+            lang = os.path.splitext(fname)[1][1:]
             context += f"\nFilename: {fname}\nContent:\n```{lang}\n{content}\n```\n"
 
-    # Prepare the project directory structure
     project_structure_str = json.dumps(project_structure, indent=4)
 
     system_message = {
         'role': 'system',
         'content': (
             'You are an AI assistant specializing in software development. '
+            'You will be provided with a main task and additional implementation details. '
+            'Consider all the details when generating the code. '
             'Provide only the pure text code or content for the file. '
             'No explanations, no audio, no binary. Only code in triple backticks.'
         )
     }
+    
     user_message = {
         'role': 'user',
         'content': (
             f'Project Goal:\n"{goal}"\n\n'
             f'Project Directory Structure:\n{project_structure_str}\n\n'
             f'You are working on the file: "{file_path}"\n'
-            f'Task Description:\n"{step}"\n\n'
+            f'Main Task:\n"{main_task}"\n'
+            f'Implementation Details:\n{details}\n\n'
             f'{context}\n'
             'Only provide the code or content enclosed in triple backticks.'
         )
@@ -634,8 +707,17 @@ def main():
     # 将 file_sizes 传入 decompose_goal，促使AI考虑文件大小
     plan = decompose_goal(goal, project_structure, file_sizes)
     print("\nDetailed Plan:")
-    for i, step in enumerate(plan):
-        print(f"{i+1}. {step}")
+    for i, step in enumerate(plan, 1):
+        # 分割步骤的多行内容
+        lines = step.split('\n')
+        # 打印主任务（第一行），移除可能存在的序号
+        main_task = re.sub(r'^\d+\.\s*', '', lines[0].strip())
+        print(f"{i}. {main_task}")
+        # 打印子任务细节（其余行）
+        for detail in lines[1:]:
+            if detail.strip():
+                print(f"   {detail.strip()}")
+
     proceed = input("\nPlease confirm the above detailed plan is correct. Proceed? (y/n): ")
     if proceed.lower() != 'y':
         print("Operation cancelled.")
