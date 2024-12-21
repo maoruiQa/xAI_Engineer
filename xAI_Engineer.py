@@ -224,51 +224,57 @@ def decompose_goal(goal, project_structure, file_sizes):
     example_subtasks = """
 Example of a full list of detailed subtasks (for illustration):
 1. Create a new file 'game/player.py' and write the Player class.
-   - The Player class should include methods for movement (move_left, move_right, jump).
-   - This script will be called by 'game_manager.py' for player initialization and control.
-   - The 'Player' class should expose its current position for use by other game components.
-
+     - The Player class should include methods for movement (move_left, move_right, jump) and status updates.
+     - This script will import `check_collision` from 'utils/helpers.py' to check interactions with obstacles.
+     - The Player class should expose `get_position() -> tuple` that returns the current position as a tuple (x, y).
+     - The Player class should expose `update_state(action: str)` that updates the player state based on input actions.
+     - Dependencies include `check_collision(rect1: tuple, rect2: tuple) -> bool` from 'utils/helpers.py' for collision detection.
 2. Create a new file 'game/enemies.py' and write the Enemy class.
-   - The Enemy class should include methods for movement patterns and interactions (e.g., attack).
-   - This script will be used by 'game_manager.py' to spawn and control enemy behaviors.
-   - The 'Enemy' class should expose methods to get its current state (e.g., is_alive).
-
+     - The Enemy class should include methods for movement patterns, attacking, and state tracking (e.g., is_alive).
+     - This script will import `Level` from 'game/level.py' to instantiate a `Level` object and access the `get_platforms` method.
+     - The Enemy class should expose `get_state() -> dict` that returns the current state of the enemy.
+     - The Enemy class should expose `update_behavior(player_position: tuple)` that updates the behavior based on player position.
+     - Dependencies include `get_platforms()` from an instance of `Level` to retrieve platform positions.
 3. Create a new file 'game/level.py' and write the Level class.
-   - The Level class should define the structure of the game levels, including platforms and obstacles.
-   - This script will be called by 'game_manager.py' to load and manage levels.
-   - The 'Level' class should provide methods for retrieving platform positions and level dimensions.
-
+     - The Level class should define the structure of game levels, including platform positions, obstacles, and boundaries.
+     - This script will import `read_file_safe` from 'utils/helpers.py' to load level configurations.
+     - The Level class should expose `get_platforms() -> list` that returns a list of platform positions.
+     - The Level class should expose `is_position_valid(position: tuple) -> bool` that checks position validity.
+     - Dependencies include `read_file_safe(file_path: str) -> dict` from 'utils/helpers.py'.
 4. Create a new file 'game/game_manager.py' and write the GameManager class.
-   - The GameManager class should handle the game loop, including updates for the player, enemies, and levels.
-   - This script will call 'player.py', 'enemies.py', and 'level.py' for their respective functionalities.
-   - The 'GameManager' class should expose a method to start and stop the game.
-
+     - The GameManager class should handle the game loop, including updates for player, enemies, and levels.
+     - This script will import `Player`, `Enemy`, and `Level` classes for managing game components.
+     - The GameManager class should expose `start_game()` that initializes and starts the main loop.
+     - The GameManager class should expose `end_game()` that handles game termination or restarting.
+     - Dependencies include `Player.update_state`, `Enemy.update_behavior`, and `Level.is_position_valid`.
 5. Create a new file 'save_system/save_manager.py' and write the SaveManager class.
-   - The SaveManager class should handle saving and loading game progress.
-   - This script will be called by 'game_manager.py' to save player progress.
-   - The 'SaveManager' class should expose methods to save and load data to/from a file.
-
+     - The SaveManager class should handle saving and loading game progress.
+     - This script will import `read_file_safe` and `write_file_safe` from 'utils/helpers.py'.
+     - The SaveManager class should expose `save_data(data: dict)` that saves game data.
+     - The SaveManager class should expose `load_data() -> dict` that loads and returns game data.
+     - Dependencies include `read_file_safe` and `write_file_safe` from 'utils/helpers.py'.
 6. Create a new file 'utils/helpers.py' and write utility functions.
-   - This script should include reusable functions such as collision detection and file handling utilities.
-   - This script will be called by multiple scripts, including 'player.py' and 'game_manager.py'.
-   - Expose functions like 'check_collision' and 'read_file_safe' for external use.
-
+     - This script should include reusable functions for collision detection and file handling.
+     - Implement `check_collision(rect1: tuple, rect2: tuple) -> bool` for collision checks.
+     - Implement `read_file_safe(file_path: str) -> dict` for reading JSON data.
+     - Implement `write_file_safe(file_path: str, data: dict)` for writing JSON data.
 7. Create a temporary file 'main_1.tmp' and write import statements.
-   - This file will import the Player, Enemy, Level, and GameManager classes.
-   - Will be appended to 'main.py'.
-
+     - Import `Player`, `Enemy`, `Level`, and `GameManager` classes.
+     - Import necessary utilities from 'utils/helpers.py'.
+     - This file will be appended to 'main.py'.
 8. Create a temporary file 'main_2.tmp' and write game initialization code.
-   - This file will initialize instances of GameManager, Player, and Level.
-   - Will be appended to 'main.py'.
-
+     - Initialize `GameManager`, `Player`, and `Level` with required parameters.
+     - Include code like: `player = Player(start_position=(0, 0))`.
+     - Include code like: `level = Level(config_path="levels/level1.json")`.
+     - This file will be appended to 'main.py'.
 9. Create a temporary file 'main_3.tmp' and write the game loop code.
-   - This file will define the game loop, calling GameManager for updates.
-   - Will be appended to 'main.py'.
-
+     - Define the main game loop with `GameManager` updates.
+     - Include code like: `game_manager.update(player_input)`.
+     - This file will be appended to 'main.py'.
 10. Create a temporary file 'main_4.tmp' and write game over logic.
-    - This file will handle game-over events, calling GameManager to reset or quit.
-    - Will be appended to 'main.py'.
-
+     - Handle game-over events using `GameManager`.
+     - Include code like: `if game_manager.is_game_over(): game_manager.end_game()`.
+     - This file will be appended to 'main.py'.
 11. Append the content of 'main_1.tmp' to 'main.py'.
 12. Append the content of 'main_2.tmp' to 'main.py'.
 13. Append the content of 'main_3.tmp' to 'main.py'.
@@ -277,14 +283,28 @@ Example of a full list of detailed subtasks (for illustration):
 16. Delete 'main_2.tmp'.
 17. Delete 'main_3.tmp'.
 18. Delete 'main_4.tmp'.
-
-19. Create a new file 'readme.md' and write the tutorial for deploying or running this project.
-    - The readme should include instructions for setting up dependencies and running the game.
-
-20. Create a new file 'requirements.txt' and write dependencies and their versions.
-    - Include necessary libraries such as pygame.
+19. Create a new file 'readme.md' and write project documentation.
+    - Include setup instructions for installing dependencies
+    - Include instructions for running the game
+    - Include description of expected game flow and controls
+20. Create a new file 'requirements.txt' and write dependencies.
+    - List all required Python packages with versions
+    - Include pygame and other necessary libraries
+21. Create JSON configuration files in 'levels' folder.
+    - Create three level files: 'level1.json', 'level2.json', 'level3.json'
+    - Required string fields: level_name (level identifier), background (background theme), music_track (background music file name)
+    - Required integer fields: time_limit (seconds to complete level)
+    - Required array field 'platforms': each platform object must have x, y, width, height as integers
+    - Required array field 'obstacles': each obstacle object must have x, y, width, height as integers and type as string
+    - Required array field 'enemies': each enemy object must have x, y as integers and type as string
+    - Required array field 'collectibles': each collectible must have x, y as integers, type as string, value as integer
+    - Required object field 'spawn_point': must have x, y as integers for player starting position
+    - Required object field 'exit_point': must have x, y as integers for level completion position
+    - The Level class must validate all fields exist and contain valid data types
+    - The Level class must validate all coordinates are within the game boundaries
+    - The Level class must validate that platform layouts create a completable path
+    - Each subsequent level should increase difficulty through platform spacing and enemy count
 """
-
 
     system_message = {
         'role': 'system',
@@ -294,6 +314,7 @@ Example of a full list of detailed subtasks (for illustration):
             'Allowed operations: create/write a text file, delete a file, or append content from one file to another. '
             'Do not include tasks that create audio, image, or binary files. '
             'Do not include tasks that are not feasible in a pure text-based environment. '
+            'If the goal is simple enough to achieve it with one script file, do not create any other script file. '
             'If one of the script files is estimated to be bigger than 4KB, create temporary files(For example:snake_1.tmp, snake_2.tmp are the temporary file with parts of the code in snake.py). Otherwise, you don\'t need to do so. What\'s more temporary files should not be bigger than 4KB. You can create more temporary files if it is necessary. '
 	    'If there is no temporary files, don\'t \"Append\" anything in the tasks. If you want to \"Append\" something, you must say \"Append the content of \'xxx_n.tmp\' to \'xxx.py\'.\"(n is a number and xxx is the name of the script) '
             'When planning tasks, consider three aspects: user requirements (the goal), the directory structure, and the estimated file sizes of each file. '
